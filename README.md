@@ -1,5 +1,3 @@
-Language: 简体中文 | [English](https://github.com/hemingkx/ChineseNMT/blob/master/README-en.md)
-
 # ChineseNMT
 
 基于transformer的英译中翻译模型🤗。

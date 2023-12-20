@@ -29,7 +29,7 @@ def run():
     en_character_coverage = 1
     train(en_input, en_vocab_size, en_model_name, en_model_type, en_character_coverage)
 
-    ch_input = '../data/corpus.ch'
+    ch_input = '../data/corpus.zh'
     ch_vocab_size = 32000
     ch_model_name = 'chn'
     ch_model_type = 'bpe'

@@ -27,9 +27,10 @@ use_smoothing = False
 use_noamopt = True
 
 data_dir = './data'
-train_data_path = './data/json/train.json'
-dev_data_path = './data/json/dev.json'
-test_data_path = './data/json/test.json'
+# +.en/.zh
+train_data_path = './data/en-zh/train'
+dev_data_path = './data/en-zh/valid'
+test_data_path = './data/en-zh/test'
 model_path = './experiment/model.pth'
 log_path = './experiment/train.log'
 output_path = './experiment/output.txt'
@@ -38,7 +39,8 @@ output_path = './experiment/output.txt'
 # thus, if you wanna use os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3'
 # you should set CUDA_VISIBLE_DEVICES = 2 as main -> gpu_id = '0', device_id = [0, 1]
 gpu_id = '0'
-device_id = [0, 1]
+# device_id = [0, 1]
+device_id = [0]
 
 # set device
 if gpu_id != '':
