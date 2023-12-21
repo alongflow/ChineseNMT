@@ -10,9 +10,9 @@ dropout = 0.1
 padding_idx = 0
 bos_idx = 2
 eos_idx = 3
-src_vocab_size = 32000
-tgt_vocab_size = 32000
-batch_size = 32
+src_vocab_size = 25000
+tgt_vocab_size = 25000
+batch_size = 16
 epoch_num = 40
 early_stop = 5
 lr = 3e-4
@@ -27,10 +27,9 @@ use_smoothing = False
 use_noamopt = True
 
 data_dir = './data'
-# +.en/.zh
-train_data_path = './data/en-zh/train'
-dev_data_path = './data/en-zh/valid'
-test_data_path = './data/en-zh/test'
+train_data_path = './data/json/train.json'
+dev_data_path = './data/json/dev.json'
+test_data_path = './data/json/test.json'
 model_path = './experiment/model.pth'
 log_path = './experiment/train.log'
 output_path = './experiment/output.txt'
@@ -39,8 +38,7 @@ output_path = './experiment/output.txt'
 # thus, if you wanna use os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3'
 # you should set CUDA_VISIBLE_DEVICES = 2 as main -> gpu_id = '0', device_id = [0, 1]
 gpu_id = '0'
-# device_id = [0, 1]
-device_id = [0]
+device_id = [0, 1]
 
 # set device
 if gpu_id != '':

@@ -70,16 +70,12 @@ class MTDataset(Dataset):
 
     def get_dataset(self, data_path, sort=False):
         """把中文和英文按照同样的顺序排序, 以英文句子长度排序的(句子下标)顺序为基准"""
+        dataset = json.load(open(data_path, 'r'))
         out_en_sent = []
         out_cn_sent = []
-        with open(data_path + '.en', 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                out_en_sent.append(line.strip())
-        with open(data_path + '.zh', 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                out_cn_sent.append(line.strip())
+        for idx, _ in enumerate(dataset):
+            out_en_sent.append(dataset[idx][0])
+            out_cn_sent.append(dataset[idx][1])
         if sort:
             sorted_index = self.len_argsort(out_en_sent)
             out_en_sent = [out_en_sent[i] for i in sorted_index]

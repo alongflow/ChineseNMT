@@ -41,7 +41,7 @@ class NoamOpt:
 
 def get_std_opt(model):
     """for batch_size 32, 5530 steps for one epoch, 2 epoch for warm-up"""
-    return NoamOpt(model.src_embed[0].d_model, 1, 10000,
+    return NoamOpt(model.src_embed[0].d_model, 1, 20000,
                    torch.optim.Adam(model.parameters(), lr=0, betas=(0.9, 0.98), eps=1e-9))
 
 
@@ -64,18 +64,17 @@ def run():
     # 初始化模型
     model = make_model(config.src_vocab_size, config.tgt_vocab_size, config.n_layers,
                        config.d_model, config.d_ff, config.n_heads, config.dropout)
-    model_par = torch.nn.DataParallel(model)
     # 训练
     if config.use_smoothing:
         criterion = LabelSmoothing(size=config.tgt_vocab_size, padding_idx=config.padding_idx, smoothing=0.1)
-        criterion.cuda()
+        criterion = criterion.cuda()  # TODO
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=0, reduction='sum')
     if config.use_noamopt:
         optimizer = get_std_opt(model)
     else:
         optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr)
-    train(train_dataloader, dev_dataloader, model, model_par, criterion, optimizer)
+    train(train_dataloader, dev_dataloader, model, criterion, optimizer)
     test(test_dataloader, model, criterion)
 
 
@@ -108,18 +107,17 @@ def one_sentence_translate(sent, beam_search=True):
 
 def translate_example():
     """单句翻译示例"""
-    sent = "The near-term policy remedies are clear: raise the minimum wage to a level that will keep a " \
-           "fully employed worker and his or her family out of poverty, and extend the earned-income tax credit " \
-           "to childless workers."
-    # tgt: 近期的政策对策很明确：把最低工资提升到足以一个全职工人及其家庭免于贫困的水平，扩大对无子女劳动者的工资所得税减免。
+    sent = "And bringing those two together might seem a very daunting task, " \
+            "but what I'm going to try to say is that even in that complexity, " \
+            "there's some simple themes that I think, " \
+            "if we understand, we can really move forward."
+    # tgt: 将两者统一起来看起来是一件艰巨的任务。 但我想要试图去说明的是 即使是如此复杂的情况， 也存在一些我认为简单的话题， 一些如果我们能理解，就很容易向前发展的话题。
     one_sentence_translate(sent, beam_search=True)
 
 
 if __name__ == "__main__":
     import os
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3'
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     import warnings
     warnings.filterwarnings('ignore')
-    run()
+    # run()
     translate_example()
