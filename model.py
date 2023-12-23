@@ -38,6 +38,7 @@ class LabelSmoothing(nn.Module):
 
 
 class Embeddings(nn.Module):
+
     def __init__(self, d_model, vocab):
         super(Embeddings, self).__init__()
         # Embedding层
@@ -51,6 +52,7 @@ class Embeddings(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
+
     def __init__(self, d_model, dropout, max_len=5000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
@@ -70,7 +72,9 @@ class PositionalEncoding(nn.Module):
         """
         position = torch.arange(0., max_len, device=DEVICE).unsqueeze(1)
         # 这里幂运算太多，我们使用exp和log来转换实现公式中pos下面要除以的分母（由于是分母，要注意带负号）
-        div_term = torch.exp(torch.arange(0., d_model, 2, device=DEVICE) * -(math.log(10000.0) / d_model))
+        div_term = torch.exp(
+            torch.arange(0., d_model, 2, device=DEVICE) *
+            -(math.log(10000.0) / d_model))
 
         # 根据公式，计算各个位置在各embedding维度上的位置纹理值，存放到pe矩阵中
         pe[:, 0::2] = torch.sin(position * div_term)
@@ -111,6 +115,7 @@ def attention(query, key, value, mask=None, dropout=None):
 
 
 class MultiHeadedAttention(nn.Module):
+
     def __init__(self, h, d_model, dropout=0.1):
         super(MultiHeadedAttention, self).__init__()
         # 保证可以整除
@@ -131,17 +136,25 @@ class MultiHeadedAttention(nn.Module):
         nbatches = query.size(0)
         # 将embedding层乘以WQ，WK，WV矩阵(均为全连接)
         # 并将结果拆成h块，然后将第二个和第三个维度值互换(具体过程见上述解析)
-        query, key, value = [l(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
-                             for l, x in zip(self.linears, (query, key, value))]
+        query, key, value = [
+            l(x).view(nbatches, -1, self.h, self.d_k).transpose(1, 2)
+            for l, x in zip(self.linears, (query, key, value))
+        ]
         # 调用上述定义的attention函数计算得到h个注意力矩阵跟value的乘积，以及注意力矩阵
-        x, self.attn = attention(query, key, value, mask=mask, dropout=self.dropout)
+        x, self.attn = attention(query,
+                                 key,
+                                 value,
+                                 mask=mask,
+                                 dropout=self.dropout)
         # 将h个多头注意力矩阵concat起来（注意要先把h变回到第三维的位置）
-        x = x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k)
+        x = x.transpose(1, 2).contiguous().view(nbatches, -1,
+                                                self.h * self.d_k)
         # 使用self.linears中构造的最后一个全连接函数来存放变换后的矩阵进行返回
         return self.linears[-1](x)
 
 
 class LayerNorm(nn.Module):
+
     def __init__(self, features, eps=1e-6):
         super(LayerNorm, self).__init__()
         # 初始化α为全1, 而β为全0
@@ -156,7 +169,7 @@ class LayerNorm(nn.Module):
         std = x.std(-1, keepdim=True)
 
         # 返回Layer Norm的结果
-        return self.a_2 * (x - mean) / torch.sqrt(std ** 2 + self.eps) + self.b_2
+        return self.a_2 * (x - mean) / torch.sqrt(std**2 + self.eps) + self.b_2
 
 
 class SublayerConnection(nn.Module):
@@ -165,6 +178,7 @@ class SublayerConnection(nn.Module):
     只不过每一层输出之后都要先做Layer Norm再残差连接
     sublayer是lambda函数
     """
+
     def __init__(self, size, dropout):
         super(SublayerConnection, self).__init__()
         self.norm = LayerNorm(size)
@@ -181,6 +195,7 @@ def clones(module, N):
 
 
 class PositionwiseFeedForward(nn.Module):
+
     def __init__(self, d_model, d_ff, dropout=0.1):
         super(PositionwiseFeedForward, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
@@ -212,6 +227,7 @@ class Encoder(nn.Module):
 
 
 class EncoderLayer(nn.Module):
+
     def __init__(self, size, self_attn, feed_forward, dropout):
         super(EncoderLayer, self).__init__()
         self.self_attn = self_attn
@@ -230,6 +246,7 @@ class EncoderLayer(nn.Module):
 
 
 class Decoder(nn.Module):
+
     def __init__(self, layer, N):
         super(Decoder, self).__init__()
         # 复制N个encoder layer
@@ -249,6 +266,7 @@ class Decoder(nn.Module):
 
 
 class DecoderLayer(nn.Module):
+
     def __init__(self, size, self_attn, src_attn, feed_forward, dropout):
         super(DecoderLayer, self).__init__()
         self.size = size
@@ -271,6 +289,7 @@ class DecoderLayer(nn.Module):
 
 
 class Transformer(nn.Module):
+
     def __init__(self, encoder, decoder, src_embed, tgt_embed, generator):
         super(Transformer, self).__init__()
         self.encoder = encoder
@@ -302,7 +321,13 @@ class Generator(nn.Module):
         return F.log_softmax(self.proj(x), dim=-1)
 
 
-def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0.1):
+def make_model(src_vocab,
+               tgt_vocab,
+               N=6,
+               d_model=512,
+               d_ff=2048,
+               h=8,
+               dropout=0.1):
     c = copy.deepcopy
     # 实例化Attention对象
     attn = MultiHeadedAttention(h, d_model).to(DEVICE)
@@ -312,8 +337,11 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
     position = PositionalEncoding(d_model, dropout).to(DEVICE)
     # 实例化Transformer模型对象
     model = Transformer(
-        Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout).to(DEVICE), N).to(DEVICE),
-        Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout).to(DEVICE), N).to(DEVICE),
+        Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout).to(DEVICE),
+                N).to(DEVICE),
+        Decoder(
+            DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout).to(DEVICE),
+            N).to(DEVICE),
         nn.Sequential(Embeddings(d_model, src_vocab).to(DEVICE), c(position)),
         nn.Sequential(Embeddings(d_model, tgt_vocab).to(DEVICE), c(position)),
         Generator(d_model, tgt_vocab)).to(DEVICE)
@@ -327,7 +355,12 @@ def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0
     return model.to(DEVICE)
 
 
-def batch_greedy_decode(model, src, src_mask, max_len=64, start_symbol=2, end_symbol=3):
+def batch_greedy_decode(model,
+                        src,
+                        src_mask,
+                        max_len=64,
+                        start_symbol=2,
+                        end_symbol=3):
     batch_size, src_seq_len = src.size()
     results = [[] for _ in range(batch_size)]
     stop_flag = [False for _ in range(batch_size)]
@@ -337,7 +370,8 @@ def batch_greedy_decode(model, src, src_mask, max_len=64, start_symbol=2, end_sy
     tgt = torch.Tensor(batch_size, 1).fill_(start_symbol).type_as(src.data)
 
     for s in range(max_len):
-        tgt_mask = subsequent_mask(tgt.size(1)).expand(batch_size, -1, -1).type_as(src.data)
+        tgt_mask = subsequent_mask(tgt.size(1)).expand(batch_size, -1,
+                                                       -1).type_as(src.data)
         out = model.decode(memory, src_mask, Variable(tgt), Variable(tgt_mask))
 
         prob = model.generator(out[:, -1, :])
@@ -359,7 +393,12 @@ def batch_greedy_decode(model, src, src_mask, max_len=64, start_symbol=2, end_sy
     return results
 
 
-def greedy_decode(model, src, src_mask, max_len=64, start_symbol=2, end_symbol=3):
+def greedy_decode(model,
+                  src,
+                  src_mask,
+                  max_len=64,
+                  start_symbol=2,
+                  end_symbol=3):
     """传入一个训练好的模型，对指定数据进行预测"""
     # 先用encoder进行encode
     memory = model.encode(src, src_mask)
@@ -368,10 +407,9 @@ def greedy_decode(model, src, src_mask, max_len=64, start_symbol=2, end_symbol=3
     # 遍历输出的长度下标
     for i in range(max_len - 1):
         # decode得到隐层表示
-        out = model.decode(memory,
-                           src_mask,
-                           Variable(ys),
-                           Variable(subsequent_mask(ys.size(1)).type_as(src.data)))
+        out = model.decode(
+            memory, src_mask, Variable(ys),
+            Variable(subsequent_mask(ys.size(1)).type_as(src.data)))
         # 将隐藏表示转为对词典各词的log_softmax概率分布表示
         prob = model.generator(out[:, -1])
         # 获取当前位置最大概率的预测词id
@@ -380,6 +418,6 @@ def greedy_decode(model, src, src_mask, max_len=64, start_symbol=2, end_symbol=3
         if next_word == end_symbol:
             break
         # 将当前位置预测的字符id与之前的预测内容拼接起来
-        ys = torch.cat([ys,
-                        torch.ones(1, 1).type_as(src.data).fill_(next_word)], dim=1)
+        ys = torch.cat(
+            [ys, torch.ones(1, 1).type_as(src.data).fill_(next_word)], dim=1)
     return ys

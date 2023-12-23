@@ -1,6 +1,4 @@
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
 
 import logging
 import sacrebleu
@@ -33,14 +31,18 @@ def train(train_data, dev_data, model, criterion, optimizer):
     for epoch in range(1, config.epoch_num + 1):
         # 模型训练
         model.train()
-        train_loss = run_epoch(train_data, model, LossCompute(model.generator, criterion, optimizer))
+        train_loss = run_epoch(
+            train_data, model,
+            LossCompute(model.generator, criterion, optimizer))
         logging.info("Epoch: {}, loss: {}".format(epoch, train_loss))
         # 模型验证
         model.eval()
         with torch.no_grad():
-            dev_loss = run_epoch(dev_data, model, LossCompute(model.generator, criterion, None))
+            dev_loss = run_epoch(dev_data, model,
+                                 LossCompute(model.generator, criterion, None))
             bleu_score = evaluate(dev_data, model)
-        logging.info('Epoch: {}, Dev loss: {}, Bleu Score: {}'.format(epoch, dev_loss, bleu_score))
+        logging.info('Epoch: {}, Dev loss: {}, Bleu Score: {}'.format(
+            epoch, dev_loss, bleu_score))
 
         # 如果当前epoch的模型在dev集上的bleu_score优于之前记录的最优bleu_score则保存当前模型，并更新最优bleu_score值
         if bleu_score > best_bleu_score:
@@ -91,11 +93,15 @@ def evaluate(data, model, mode='dev', use_beam=True):
             src = batch.src
             src_mask = (src != 0).unsqueeze(-2)
             if use_beam:
-                decode_result, _ = beam_search(model, src, src_mask, config.max_len,
-                                               config.padding_idx, config.bos_idx, config.eos_idx,
+                decode_result, _ = beam_search(model, src, src_mask,
+                                               config.max_len,
+                                               config.padding_idx,
+                                               config.bos_idx, config.eos_idx,
                                                config.beam_size, config.device)
             else:
-                decode_result = batch_greedy_decode(model, src, src_mask,
+                decode_result = batch_greedy_decode(model,
+                                                    src,
+                                                    src_mask,
                                                     max_len=config.max_len)
             decode_result = [h[0] for h in decode_result]
             translation = [sp_chn.decode_ids(_s) for _s in decode_result]
@@ -120,7 +126,8 @@ def test(data, model, criterion):
         test_loss = run_epoch(data, model,
                               LossCompute(model.generator, criterion, None))
         bleu_score = evaluate(data, model, 'test')
-        logging.info('Test loss: {},  Bleu Score: {}'.format(test_loss, bleu_score))
+        logging.info('Test loss: {},  Bleu Score: {}'.format(
+            test_loss, bleu_score))
 
 
 def translate(src, model, use_beam=True):
@@ -131,11 +138,15 @@ def translate(src, model, use_beam=True):
         model.eval()
         src_mask = (src != 0).unsqueeze(-2)
         if use_beam:
-            decode_result, _ = beam_search(model, src, src_mask, config.max_len,
-                                           config.padding_idx, config.bos_idx, config.eos_idx,
+            decode_result, _ = beam_search(model, src, src_mask,
+                                           config.max_len, config.padding_idx,
+                                           config.bos_idx, config.eos_idx,
                                            config.beam_size, config.device)
             decode_result = [h[0] for h in decode_result]
         else:
-            decode_result = batch_greedy_decode(model, src, src_mask, max_len=config.max_len)
+            decode_result = batch_greedy_decode(model,
+                                                src,
+                                                src_mask,
+                                                max_len=config.max_len)
         translation = [sp_chn.decode_ids(_s) for _s in decode_result]
         print(translation[0])

@@ -39,7 +39,7 @@ class Batch:
             # decoder要用到的target输入部分
             self.trg = trg[:, :-1]
             # decoder训练时应预测输出的target结果
-            self.trg_y = trg[:, 1:]
+            self.a = trg[:, 1:]
             # 将target输入部分进行attention mask
             self.trg_mask = self.make_std_mask(self.trg, pad)
             # 将应输出的target结果中实际的词数进行统计
